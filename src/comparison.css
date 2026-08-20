@@ -1,0 +1,192 @@
+.cmp-viewport {
+  min-height: 100vh;
+  background: var(--colorSurface);
+}
+
+.cmp-shell {
+  min-height: 100vh;
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  background: var(--colorCardElevatedBg);
+}
+
+.cmp-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  color: var(--colorTextPrimary);
+}
+
+/* Sticky chrome: back button + plan switcher stay pinned while rows scroll. */
+.cmp-chrome {
+  position: sticky;
+  top: 0;
+  z-index: var(--zSticky);
+  isolation: isolate;
+  background: var(--colorCardElevatedBg);
+  border-bottom: var(--borderHairline) solid var(--colorBorderSubtle);
+}
+
+.cmp-header {
+  display: flex;
+  align-items: center;
+  height: var(--spacing56);
+  padding: 0 var(--spacing8);
+}
+
+.cmp-header .acko-button-icon svg {
+  width: var(--spacing16);
+  height: var(--spacing16);
+}
+
+.cmp-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing12);
+  padding: 0 var(--spacing16) var(--spacing16);
+}
+
+.cmp-switcher__active {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing6) var(--spacing12);
+  border-radius: var(--radiusFull);
+  background: var(--colorPrimarySubtle);
+}
+
+.cmp-switcher__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing4);
+}
+
+.cmp-switcher__chevron {
+  width: var(--spacing16);
+  height: var(--spacing16);
+  color: var(--colorTextSupporting);
+}
+
+/* Scrollable content */
+.cmp-content {
+  flex: 1;
+  padding: 0 var(--spacing16) var(--spacing96);
+}
+
+.cmp-section {
+  padding: var(--spacing24) 0;
+  border-bottom: var(--borderHairline) solid var(--colorBorderSubtle);
+}
+
+.cmp-section:last-child {
+  border-bottom: none;
+}
+
+.cmp-section__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing4);
+  margin-bottom: var(--spacing16);
+}
+
+.cmp-section__header .acko-typography-heading-sm {
+  text-wrap: balance;
+}
+
+.cmp-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--colorTextBrand);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.cmp-link:focus-visible {
+  box-shadow: var(--shadowFocusRing);
+  outline: none;
+}
+
+/* Two-column value row: bordered chip for text values, bare icon for booleans */
+.cmp-values {
+  display: flex;
+  align-items: stretch;
+  gap: var(--spacing12);
+}
+
+.cmp-value {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cmp-value--chip {
+  min-height: var(--spacing56);
+  padding: var(--spacing12);
+  border: var(--borderHairline) solid var(--colorBorderSubtle);
+  border-radius: var(--radius2xl);
+  background: var(--colorCardBg);
+}
+
+.cmp-value--icon {
+  min-height: var(--spacing48);
+}
+
+.cmp-status {
+  width: var(--spacing20);
+  height: var(--spacing20);
+}
+
+.cmp-status--included {
+  color: var(--colorSuccessText);
+}
+
+.cmp-status--excluded {
+  color: var(--colorTextError);
+}
+
+/* Sticky price + select footer */
+.cmp-footer {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--zSticky);
+  display: flex;
+  gap: var(--spacing12);
+  width: 100%;
+  max-width: 430px;
+  padding: var(--spacing12) var(--spacing16);
+  padding-bottom: calc(env(safe-area-inset-bottom) + var(--spacing12));
+  background: var(--colorCardElevatedBg);
+  border-top: var(--borderHairline) solid var(--colorBorderSubtle);
+  box-shadow: var(--shadowSubtle);
+}
+
+.cmp-footer__plan {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing8);
+}
+
+@media (min-width: 768px) {
+  .cmp-shell,
+  .cmp-footer {
+    max-width: 768px;
+  }
+
+  .cmp-content {
+    padding-right: var(--spacing32);
+    padding-left: var(--spacing32);
+  }
+
+  .cmp-switcher {
+    padding-right: var(--spacing32);
+    padding-left: var(--spacing32);
+  }
+}
