@@ -1,7 +1,7 @@
 import { useState, type ComponentType, type SVGProps } from "react";
 import { Button } from "@acko/button";
 import { Typography } from "@acko/typography";
-import { ArrowLeft, ChevronDown, Close, Tick } from "@acko/icons";
+import { ArrowLeft, ChevronDown, Close1, Tick } from "@acko/icons";
 import "./comparison.css";
 
 // The generated icon types fall back to a bare `string` alias when their
@@ -9,7 +9,9 @@ import "./comparison.css";
 // to match the actual runtime React components (svgr output).
 type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 const TickIcon = Tick as unknown as IconComponent;
-const CloseIcon = Close as unknown as IconComponent;
+// `Close` (no suffix) is a circled X — visually inconsistent with the plain
+// `Tick` stroke. `Close1` is the plain X glyph, matching Tick's weight/style.
+const CloseIcon = Close1 as unknown as IconComponent;
 const ChevronDownIcon = ChevronDown as unknown as IconComponent;
 
 type PlanId = "lite" | "health";
@@ -17,11 +19,12 @@ type PlanId = "lite" | "health";
 type Plan = {
   id: PlanId;
   name: string;
-  price: string;
+  priceMain: string;
+  priceSuffix: string;
 };
 
 type RowValue =
-  | { kind: "chip"; text: string }
+  | { kind: "text"; text: string }
   | { kind: "icon"; included: boolean };
 
 type ComparisonRow = {
@@ -32,19 +35,16 @@ type ComparisonRow = {
 };
 
 const plans: Plan[] = [
-  { id: "lite", name: "Platinum Lite Health", price: "₹833/mo" },
-  { id: "health", name: "Platinum Health", price: "₹1,000/mo" },
+  { id: "lite", name: "Platinum Lite Health", priceMain: "₹833", priceSuffix: "/mo" },
+  { id: "health", name: "Platinum Health", priceMain: "₹1,000", priceSuffix: "/mo" },
 ];
 
 const comparisonRows: ComparisonRow[] = [
   {
     title: "Sum insured",
     description:
-      "This is how much your plan will cover for hospitalisation across your whole family.",
-    values: [
-      { kind: "chip", text: "₹50 lakh" },
-      { kind: "chip", text: "₹1 crore" },
-    ],
+      "This is how much your plan will cover for hospitalisation across your whole family",
+    values: [{ kind: "text", text: "₹50 lakh" }, { kind: "text", text: "₹1 crore" }],
   },
   {
     title: "Health evaluation",
@@ -52,24 +52,21 @@ const comparisonRows: ComparisonRow[] = [
       "We evaluate the health of all members you want to cover so we can recommend the best coverage for your family.",
     linkLabel: "See less",
     values: [
-      { kind: "chip", text: "Required only for members with health conditions" },
-      { kind: "chip", text: "Required for all members" },
+      { kind: "text", text: "Required only for members with health conditions" },
+      { kind: "text", text: "Required for all members" },
     ],
   },
   {
     title: "Specific illness waiting period",
     description:
-      "For certain conditions, like diabetes or joint replacement, there’s a waiting period before your plan.",
+      "For certain conditions, like diabetes or joint replacement, there’s a waiting period before your plan..",
     linkLabel: "See more",
-    values: [
-      { kind: "chip", text: "2 years" },
-      { kind: "chip", text: "None" },
-    ],
+    values: [{ kind: "text", text: "2 years" }, { kind: "text", text: "None" }],
   },
   {
     title: "In patient hospitalisation",
     description:
-      "This covers all costs for hospital stays due to illness, accidents, or critical conditions. Your family i…",
+      "This covers all costs for hospital stays due to illness, accidents, or critical conditions. Your family i...",
     linkLabel: "See more",
     values: [
       { kind: "icon", included: true },
@@ -108,13 +105,17 @@ const comparisonRows: ComparisonRow[] = [
 ];
 
 function ComparisonValue({ value }: { value: RowValue }) {
-  if (value.kind === "chip") {
+  if (value.kind === "text") {
     return (
-      <div className="cmp-value cmp-value--chip">
-        <Typography variant="caption" weight="medium" align="center">
-          {value.text}
-        </Typography>
-      </div>
+      <Typography
+        as="span"
+        scale="sm"
+        emphasis="normal"
+        align="center"
+        className="cmp-value cmp-value--text"
+      >
+        {value.text}
+      </Typography>
     );
   }
 
@@ -134,32 +135,34 @@ function ComparisonValue({ value }: { value: RowValue }) {
   );
 }
 
-function PlanSwitcherHeader({ selectedPlan }: { selectedPlan: PlanId }) {
+function PlanSwitcherHeader() {
   return (
     <div className="cmp-chrome">
       <header className="cmp-header">
         <Button
           variant="ghost"
-          size="xs"
+          size="sm"
           iconOnly
           aria-label="Go back"
           iconLeft={<ArrowLeft />}
+          className="cmp-back-btn"
         >
           Go back
         </Button>
       </header>
       <div className="cmp-switcher" role="row">
-        <span
-          className="cmp-switcher__active"
+        <Typography
+          as="span"
+          scale="sm"
+          emphasis="bold"
           role="columnheader"
-          aria-current={selectedPlan === "lite" ? "true" : undefined}
+          className="cmp-switcher__active"
         >
-          <Typography variant="label-sm" weight="semibold" color="brand">
-            {plans[0].name}
-          </Typography>
-        </span>
+          {plans[0].name}
+        </Typography>
+        <span className="cmp-divider cmp-divider--switcher" aria-hidden="true" />
         <span className="cmp-switcher__trigger" role="columnheader">
-          <Typography variant="label-sm" weight="semibold">
+          <Typography as="span" scale="sm" emphasis="bold">
             {plans[1].name}
           </Typography>
           <ChevronDownIcon aria-hidden="true" className="cmp-switcher__chevron" />
@@ -178,16 +181,16 @@ function PlanComparisonGrid({
 }) {
   return (
     <section className="cmp-page" aria-label="Compare health insurance plans">
-      <PlanSwitcherHeader selectedPlan={selectedPlan} />
+      <PlanSwitcherHeader />
 
       <div className="cmp-content">
         {comparisonRows.map((row) => (
           <div className="cmp-section" key={row.title}>
             <div className="cmp-section__header">
-              <Typography variant="heading-sm" weight="semibold">
+              <Typography as="h3" scale="base" emphasis="bold">
                 {row.title}
               </Typography>
-              <Typography variant="caption" color="secondary">
+              <Typography as="p" scale="xs" emphasis="normal" color="secondary">
                 {row.description}
                 {row.linkLabel ? (
                   <>
@@ -201,6 +204,7 @@ function PlanComparisonGrid({
             </div>
             <div className="cmp-values">
               <ComparisonValue value={row.values[0]} />
+              <span className="cmp-divider cmp-divider--value" aria-hidden="true" />
               <ComparisonValue value={row.values[1]} />
             </div>
           </div>
@@ -208,21 +212,28 @@ function PlanComparisonGrid({
       </div>
 
       <div className="cmp-footer">
-        {plans.map((plan) => (
-          <div className="cmp-footer__plan" key={plan.id}>
-            <Typography variant="label-md" weight="semibold" align="center">
-              {plan.price}
-            </Typography>
-            <Button
-              variant={plan.id === selectedPlan ? "primary" : "secondary"}
-              size="xs"
-              fullWidth
-              onClick={() => onSelect(plan.id)}
-            >
-              Select
-            </Button>
-          </div>
-        ))}
+        <div className="cmp-footer__inner">
+          {plans.map((plan) => (
+            <div className="cmp-footer__plan" key={plan.id}>
+              <p className="cmp-price">
+                <Typography as="span" scale="base" emphasis="bold">
+                  {plan.priceMain}
+                </Typography>
+                <Typography as="span" scale="2xs" emphasis="normal" color="secondary">
+                  {plan.priceSuffix}
+                </Typography>
+              </p>
+              <Button
+                variant={plan.id === selectedPlan ? "primary" : "secondary"}
+                size="sm"
+                fullWidth
+                onClick={() => onSelect(plan.id)}
+              >
+                Select
+              </Button>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

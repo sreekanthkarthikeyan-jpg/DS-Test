@@ -1,21 +1,54 @@
 .cmp-viewport {
   min-height: 100vh;
-  background: var(--colorSurface);
+  background: var(--surfaceBase);
 }
 
 .cmp-shell {
   min-height: 100vh;
   width: 100%;
-  max-width: 430px;
-  margin: 0 auto;
-  background: var(--colorCardElevatedBg);
+  background: var(--cardFillDefault);
 }
 
 .cmp-page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  color: var(--colorTextPrimary);
+  color: var(--textPrimary);
+}
+
+/* Section Container gutters — 16px mobile / 32px tablet / 40px desktop,
+   fluid until 1024px then capped + centred, per layout.md. Shared across
+   every horizontal band (header, switcher, content, footer) so columns
+   stay aligned at every breakpoint. */
+.cmp-header,
+.cmp-switcher,
+.cmp-content,
+.cmp-footer__inner {
+  padding-left: var(--spacing16);
+  padding-right: var(--spacing16);
+}
+
+@media (min-width: 768px) {
+  .cmp-header,
+  .cmp-switcher,
+  .cmp-content,
+  .cmp-footer__inner {
+    padding-left: var(--spacing32);
+    padding-right: var(--spacing32);
+  }
+}
+
+@media (min-width: 1024px) {
+  .cmp-header,
+  .cmp-switcher,
+  .cmp-content,
+  .cmp-footer__inner {
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--spacing40);
+    padding-right: var(--spacing40);
+  }
 }
 
 /* Sticky chrome: back button + plan switcher stay pinned while rows scroll. */
@@ -24,59 +57,84 @@
   top: 0;
   z-index: var(--zSticky);
   isolation: isolate;
-  background: var(--colorCardElevatedBg);
-  border-bottom: var(--borderHairline) solid var(--colorBorderSubtle);
+  background: var(--cardFillDefault);
 }
 
 .cmp-header {
   display: flex;
   align-items: center;
-  height: var(--spacing56);
-  padding: 0 var(--spacing8);
+  padding-top: var(--spacing12);
+  padding-bottom: var(--spacing12);
 }
 
-.cmp-header .acko-button-icon svg {
-  width: var(--spacing16);
-  height: var(--spacing16);
+/* 36px native button + invisible pseudo-element hit-area to reach the
+   44px minimum tap target, per touch-accessibility rules — no internal
+   component overrides. */
+.cmp-back-btn {
+  position: relative;
+}
+
+.cmp-back-btn::before {
+  content: "";
+  position: absolute;
+  inset: calc((44px - 100%) / -2);
 }
 
 .cmp-switcher {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing12);
-  padding: 0 var(--spacing16) var(--spacing16);
+  justify-content: center;
+  gap: var(--spacing16);
+  padding-bottom: var(--spacing8);
+  box-shadow: var(--shadowXs);
 }
 
+/* Active plan gets the brand gradient wordmark treatment, no chip/pill. */
 .cmp-switcher__active {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--spacing6) var(--spacing12);
-  border-radius: var(--radiusFull);
-  background: var(--colorPrimarySubtle);
+  display: inline-block;
+  background: var(--gradientPurpleDefaultH);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+  white-space: nowrap;
 }
 
 .cmp-switcher__trigger {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing4);
+  gap: var(--spacing8);
+  white-space: nowrap;
 }
 
 .cmp-switcher__chevron {
   width: var(--spacing16);
   height: var(--spacing16);
-  color: var(--colorTextSupporting);
+  color: var(--textPrimary);
+}
+
+/* Shared vertical divider used both in the switcher and value rows */
+.cmp-divider {
+  width: var(--borderHairline);
+  flex-shrink: 0;
+  background: var(--separatorLine);
+  align-self: stretch;
+}
+
+.cmp-divider--switcher {
+  height: var(--spacing20);
+  align-self: center;
 }
 
 /* Scrollable content */
 .cmp-content {
   flex: 1;
-  padding: 0 var(--spacing16) var(--spacing96);
+  padding-bottom: var(--spacing96);
 }
 
 .cmp-section {
   padding: var(--spacing24) 0;
-  border-bottom: var(--borderHairline) solid var(--colorBorderSubtle);
+  border-bottom: var(--borderHairline) solid var(--separatorLine);
 }
 
 .cmp-section:last-child {
@@ -86,54 +144,52 @@
 .cmp-section__header {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing4);
-  margin-bottom: var(--spacing16);
-}
-
-.cmp-section__header .acko-typography-heading-sm {
-  text-wrap: balance;
+  gap: var(--spacing8);
+  margin-bottom: var(--spacing20);
 }
 
 .cmp-link {
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--colorTextBrand);
+  color: var(--textLink);
   font: inherit;
+  font-weight: var(--typefaceWeightMedium);
   text-decoration: underline;
   cursor: pointer;
 }
 
 .cmp-link:focus-visible {
-  box-shadow: var(--shadowFocusRing);
-  outline: none;
+  outline: 2px solid var(--borderFocus);
+  outline-offset: 2px;
 }
 
-/* Two-column value row: bordered chip for text values, bare icon for booleans */
+/* Two-column value row: centered cluster with a hairline divider, matching
+   the Figma reference — relative widths so it scales cleanly at every
+   breakpoint instead of a fixed pixel column. */
 .cmp-values {
   display: flex;
   align-items: stretch;
-  gap: var(--spacing12);
+  justify-content: center;
+  gap: var(--spacing24);
+  min-height: var(--spacing32);
 }
 
 .cmp-value {
   flex: 1 1 0;
   min-width: 0;
+  max-width: 45%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.cmp-value--chip {
-  min-height: var(--spacing56);
-  padding: var(--spacing12);
-  border: var(--borderHairline) solid var(--colorBorderSubtle);
-  border-radius: var(--radius2xl);
-  background: var(--colorCardBg);
+.cmp-value--text {
+  color: var(--textPrimary);
 }
 
 .cmp-value--icon {
-  min-height: var(--spacing48);
+  min-width: var(--spacing24);
 }
 
 .cmp-status {
@@ -142,51 +198,54 @@
 }
 
 .cmp-status--included {
-  color: var(--colorSuccessText);
+  color: var(--statusSuccessText);
 }
 
 .cmp-status--excluded {
-  color: var(--colorTextError);
+  color: var(--statusErrorText);
 }
 
-/* Sticky price + select footer */
+/* Sticky price + select footer — full-bleed outer layer carries the fixed
+   position/background, inner layer applies Section Container gutters, per
+   the two-layer structure in layout.md. */
 .cmp-footer {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: var(--zSticky);
-  display: flex;
-  gap: var(--spacing12);
+  left: 0;
   width: 100%;
-  max-width: 430px;
-  padding: var(--spacing12) var(--spacing16);
-  padding-bottom: calc(env(safe-area-inset-bottom) + var(--spacing12));
-  background: var(--colorCardElevatedBg);
-  border-top: var(--borderHairline) solid var(--colorBorderSubtle);
-  box-shadow: var(--shadowSubtle);
+  z-index: var(--zSticky);
+  background: var(--cardFillDefault);
+  box-shadow: var(--shadowXs);
+}
+
+.cmp-footer__inner {
+  display: flex;
+  gap: var(--spacing16);
+  padding-top: var(--spacing12);
+  padding-bottom: calc(env(safe-area-inset-bottom) + var(--spacing20));
+}
+
+/* Price + "/mo" suffix rendered as one line but two Figma text styles —
+   Heading/XX Small (16px/22px) for the amount, a smaller regular size for
+   the suffix, baseline-aligned. */
+.cmp-price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin: 0;
 }
 
 .cmp-footer__plan {
   flex: 1 1 0;
+  min-width: 0;
+  max-width: 45%;
   display: flex;
   flex-direction: column;
   gap: var(--spacing8);
 }
 
-@media (min-width: 768px) {
-  .cmp-shell,
-  .cmp-footer {
-    max-width: 768px;
-  }
-
-  .cmp-content {
-    padding-right: var(--spacing32);
-    padding-left: var(--spacing32);
-  }
-
-  .cmp-switcher {
-    padding-right: var(--spacing32);
-    padding-left: var(--spacing32);
+@media (min-width: 1024px) {
+  .cmp-footer__inner {
+    justify-content: center;
   }
 }
