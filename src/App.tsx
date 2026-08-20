@@ -1,5 +1,6 @@
-import { useState, type ComponentType, type SVGProps } from "react";
+import { useRef, useState, type ComponentType, type SVGProps } from "react";
 import { Button } from "@acko/button";
+import { Drawer } from "@acko/drawer";
 import { Typography } from "@acko/typography";
 import { ArrowLeft, ChevronDown, Close1, Tick } from "@acko/icons";
 import "./comparison.css";
@@ -37,6 +38,18 @@ type ComparisonRow = {
 const plans: Plan[] = [
   { id: "lite", name: "Platinum Lite Health", priceMain: "₹833", priceSuffix: "/mo" },
   { id: "health", name: "Platinum Health", priceMain: "₹1,000", priceSuffix: "/mo" },
+];
+
+// The "compare against" picker (bottom sheet) offers plans beyond the two
+// already loaded above. Only "health" has comparison-row data wired up in
+// `comparisonRows` — "essential" is presented per the Figma bottom sheet but
+// has no coverage figures modelled yet, so picking it only relabels the
+// switcher trigger rather than swapping in fabricated numbers.
+type ComparePlanOption = { id: string; name: string; hasData: boolean };
+
+const comparePlanOptions: ComparePlanOption[] = [
+  { id: "health", name: "Platinum Health", hasData: true },
+  { id: "essential", name: "Platinum Essential", hasData: false },
 ];
 
 const comparisonRows: ComparisonRow[] = [
@@ -135,7 +148,19 @@ function ComparisonValue({ value }: { value: RowValue }) {
   );
 }
 
-function PlanSwitcherHeader() {
+function PlanSwitcherHeader({
+  compareOptionId,
+  onChooseCompareOption,
+}: {
+  compareOptionId: string;
+  onChooseCompareOption: (optionId: string) => void;
+}) {
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const planOptionRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const compareOption =
+    comparePlanOptions.find((option) => option.id === compareOptionId) ??
+    comparePlanOptions[0];
+
   return (
     <div className="cmp-chrome">
       <header className="cmp-header">
@@ -150,24 +175,99 @@ function PlanSwitcherHeader() {
           Go back
         </Button>
       </header>
-      <div className="cmp-switcher" role="row">
-        <Typography
-          as="span"
-          scale="sm"
-          emphasis="bold"
-          role="columnheader"
-          className="cmp-switcher__active"
-        >
-          {plans[0].name}
-        </Typography>
-        <span className="cmp-divider cmp-divider--switcher" aria-hidden="true" />
-        <span className="cmp-switcher__trigger" role="columnheader">
-          <Typography as="span" scale="sm" emphasis="bold">
-            {plans[1].name}
+      <div className="cmp-switcher">
+        <div className="cmp-switcher__plans">
+          <Typography
+            as="span"
+            scale="sm"
+            emphasis="bold"
+            className="cmp-switcher__active"
+          >
+            {plans[0].name}
           </Typography>
-          <ChevronDownIcon aria-hidden="true" className="cmp-switcher__chevron" />
-        </span>
+          <span className="cmp-divider cmp-divider--switcher" aria-hidden="true" />
+          <button
+            type="button"
+            className="cmp-switcher__trigger"
+            aria-haspopup="dialog"
+            aria-expanded={isSheetOpen}
+            aria-label={`Change plan to compare, currently ${compareOption.name}`}
+            onClick={() => setIsSheetOpen(true)}
+          >
+            <Typography as="span" scale="sm" emphasis="bold">
+              {compareOption.name}
+            </Typography>
+            <ChevronDownIcon
+              aria-hidden="true"
+              className={
+                isSheetOpen
+                  ? "cmp-switcher__chevron cmp-switcher__chevron--open"
+                  : "cmp-switcher__chevron"
+              }
+            />
+          </button>
+        </div>
       </div>
+
+      <Drawer
+        open={isSheetOpen}
+        onClose={() => setIsSheetOpen(false)}
+        side="bottom"
+        size="md"
+      >
+        <Typography as="h2" scale="xl" emphasis="bold">
+          Select plan to compare
+        </Typography>
+        <div
+          className="cmp-plan-picker"
+          role="radiogroup"
+          aria-label="Select plan to compare"
+          onKeyDown={(event) => {
+            if (!["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+              return;
+            }
+            event.preventDefault();
+            const currentIndex = comparePlanOptions.findIndex(
+              (option) => option.id === compareOptionId,
+            );
+            const direction = event.key === "ArrowDown" || event.key === "ArrowRight" ? 1 : -1;
+            const nextIndex =
+              (currentIndex + direction + comparePlanOptions.length) %
+              comparePlanOptions.length;
+            const nextOption = comparePlanOptions[nextIndex];
+            onChooseCompareOption(nextOption.id);
+            planOptionRefs.current[nextOption.id]?.focus();
+          }}
+        >
+          {comparePlanOptions.map((option) => {
+            const checked = option.id === compareOptionId;
+            return (
+              <button
+                key={option.id}
+                ref={(node) => {
+                  planOptionRefs.current[option.id] = node;
+                }}
+                type="button"
+                role="radio"
+                aria-checked={checked}
+                tabIndex={checked ? 0 : -1}
+                className="cmp-plan-option"
+                onClick={() => {
+                  onChooseCompareOption(option.id);
+                  setIsSheetOpen(false);
+                }}
+              >
+                <Typography as="span" scale="base" emphasis="normal" color={checked ? "brand" : "primary"}>
+                  {option.name}
+                </Typography>
+                {checked ? (
+                  <TickIcon aria-hidden="true" className="cmp-plan-option__tick" />
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+      </Drawer>
     </div>
   );
 }
@@ -175,13 +275,20 @@ function PlanSwitcherHeader() {
 function PlanComparisonGrid({
   selectedPlan,
   onSelect,
+  compareOptionId,
+  onChooseCompareOption,
 }: {
   selectedPlan: PlanId;
   onSelect: (planId: PlanId) => void;
+  compareOptionId: string;
+  onChooseCompareOption: (optionId: string) => void;
 }) {
   return (
     <section className="cmp-page" aria-label="Compare health insurance plans">
-      <PlanSwitcherHeader />
+      <PlanSwitcherHeader
+        compareOptionId={compareOptionId}
+        onChooseCompareOption={onChooseCompareOption}
+      />
 
       <div className="cmp-content">
         {comparisonRows.map((row) => (
@@ -215,14 +322,14 @@ function PlanComparisonGrid({
         <div className="cmp-footer__inner">
           {plans.map((plan) => (
             <div className="cmp-footer__plan" key={plan.id}>
-              <p className="cmp-price">
+              <div className="cmp-price">
                 <Typography as="span" scale="base" emphasis="bold">
                   {plan.priceMain}
                 </Typography>
-                <Typography as="span" scale="2xs" emphasis="normal" color="secondary">
+                <Typography as="span" scale="xs" emphasis="normal" color="secondary">
                   {plan.priceSuffix}
                 </Typography>
-              </p>
+              </div>
               <Button
                 variant={plan.id === selectedPlan ? "primary" : "secondary"}
                 size="sm"
@@ -241,11 +348,17 @@ function PlanComparisonGrid({
 
 function App() {
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("lite");
+  const [compareOptionId, setCompareOptionId] = useState<string>("health");
 
   return (
     <main className="cmp-viewport">
       <div className="cmp-shell">
-        <PlanComparisonGrid selectedPlan={selectedPlan} onSelect={setSelectedPlan} />
+        <PlanComparisonGrid
+          selectedPlan={selectedPlan}
+          onSelect={setSelectedPlan}
+          compareOptionId={compareOptionId}
+          onChooseCompareOption={setCompareOptionId}
+        />
       </div>
     </main>
   );
